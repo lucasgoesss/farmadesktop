@@ -1,22 +1,43 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: FarmaSystem - API de Gestão de Farmácia
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: dashboard
+    description: Dashboard e resumos
+  - name: products
+    description: Cadastro de produtos
+  - name: stock
+    description: Controle de estoque
+  - name: sales
+    description: Vendas e PDV
+  - name: customers
+    description: Clientes
+  - name: suppliers
+    description: Fornecedores
+  - name: prescriptions
+    description: Receitas médicas
+  - name: controlled
+    description: Medicamentos controlados
+  - name: purchases
+    description: Compras
+  - name: financial
+    description: Financeiro
+  - name: users
+    description: Usuários e permissões
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +45,896 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── Dashboard ───────────────────────────────────────────────
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Resumo do dashboard
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/recent-sales:
+    get:
+      operationId: getDashboardRecentSales
+      tags: [dashboard]
+      summary: Vendas recentes
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Sale"
+
+  /dashboard/top-products:
+    get:
+      operationId: getDashboardTopProducts
+      tags: [dashboard]
+      summary: Produtos mais vendidos
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TopProduct"
+
+  /dashboard/low-stock:
+    get:
+      operationId: getDashboardLowStock
+      tags: [dashboard]
+      summary: Produtos com estoque baixo
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+
+  /dashboard/expiring-products:
+    get:
+      operationId: getDashboardExpiringProducts
+      tags: [dashboard]
+      summary: Produtos próximos do vencimento
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StockLot"
+
+  /dashboard/monthly-sales:
+    get:
+      operationId: getDashboardMonthlySales
+      tags: [dashboard]
+      summary: Gráfico de vendas mensais
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MonthlySalePoint"
+
+  # ─── Products ─────────────────────────────────────────────────
+  /products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: Listar produtos
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: controlled
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Criar produto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductBody"
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /products/{id}:
+    get:
+      operationId: getProduct
+      tags: [products]
+      summary: Obter produto
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    patch:
+      operationId: updateProduct
+      tags: [products]
+      summary: Atualizar produto
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      summary: Excluir produto
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Excluído
+
+  /products/barcode/{barcode}:
+    get:
+      operationId: getProductByBarcode
+      tags: [products]
+      summary: Buscar produto por código de barras
+      parameters:
+        - name: barcode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  # ─── Stock ────────────────────────────────────────────────────
+  /stock:
+    get:
+      operationId: listStock
+      tags: [stock]
+      summary: Listar lotes de estoque
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StockLot"
+    post:
+      operationId: createStockEntry
+      tags: [stock]
+      summary: Entrada de mercadoria
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStockEntryBody"
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StockLot"
+
+  /stock/movements:
+    get:
+      operationId: listStockMovements
+      tags: [stock]
+      summary: Histórico de movimentações
+      parameters:
+        - name: productId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StockMovement"
+
+  /stock/adjust:
+    post:
+      operationId: adjustStock
+      tags: [stock]
+      summary: Ajuste manual de estoque
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockAdjustBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StockMovement"
+
+  # ─── Sales ────────────────────────────────────────────────────
+  /sales:
+    get:
+      operationId: listSales
+      tags: [sales]
+      summary: Listar vendas
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Sale"
+    post:
+      operationId: createSale
+      tags: [sales]
+      summary: Criar venda
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSaleBody"
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sale"
+
+  /sales/{id}:
+    get:
+      operationId: getSale
+      tags: [sales]
+      summary: Obter venda
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sale"
+
+  /sales/{id}/cancel:
+    patch:
+      operationId: cancelSale
+      tags: [sales]
+      summary: Cancelar venda
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sale"
+
+  # ─── Customers ────────────────────────────────────────────────
+  /customers:
+    get:
+      operationId: listCustomers
+      tags: [customers]
+      summary: Listar clientes
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Customer"
+    post:
+      operationId: createCustomer
+      tags: [customers]
+      summary: Criar cliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCustomerBody"
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+
+  /customers/{id}:
+    get:
+      operationId: getCustomer
+      tags: [customers]
+      summary: Obter cliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+    patch:
+      operationId: updateCustomer
+      tags: [customers]
+      summary: Atualizar cliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCustomerBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+    delete:
+      operationId: deleteCustomer
+      tags: [customers]
+      summary: Excluir cliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Excluído
+
+  /customers/{id}/sales:
+    get:
+      operationId: getCustomerSales
+      tags: [customers]
+      summary: Histórico de compras do cliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Sale"
+
+  # ─── Suppliers ────────────────────────────────────────────────
+  /suppliers:
+    get:
+      operationId: listSuppliers
+      tags: [suppliers]
+      summary: Listar fornecedores
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Supplier"
+    post:
+      operationId: createSupplier
+      tags: [suppliers]
+      summary: Criar fornecedor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSupplierBody"
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Supplier"
+
+  /suppliers/{id}:
+    get:
+      operationId: getSupplier
+      tags: [suppliers]
+      summary: Obter fornecedor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Supplier"
+    patch:
+      operationId: updateSupplier
+      tags: [suppliers]
+      summary: Atualizar fornecedor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSupplierBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Supplier"
+    delete:
+      operationId: deleteSupplier
+      tags: [suppliers]
+      summary: Excluir fornecedor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Excluído
+
+  # ─── Prescriptions ────────────────────────────────────────────
+  /prescriptions:
+    get:
+      operationId: listPrescriptions
+      tags: [prescriptions]
+      summary: Listar receitas
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Prescription"
+    post:
+      operationId: createPrescription
+      tags: [prescriptions]
+      summary: Registrar receita
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePrescriptionBody"
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Prescription"
+
+  /prescriptions/{id}:
+    get:
+      operationId: getPrescription
+      tags: [prescriptions]
+      summary: Obter receita
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Prescription"
+
+  # ─── Controlled Medications ───────────────────────────────────
+  /controlled:
+    get:
+      operationId: listControlledDispensations
+      tags: [controlled]
+      summary: Listar dispensações de controlados
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ControlledDispensation"
+    post:
+      operationId: createControlledDispensation
+      tags: [controlled]
+      summary: Registrar dispensação de controlado
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateControlledDispensationBody"
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ControlledDispensation"
+
+  /controlled/{id}:
+    get:
+      operationId: getControlledDispensation
+      tags: [controlled]
+      summary: Obter dispensação de controlado
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ControlledDispensation"
+
+  # ─── Purchases ────────────────────────────────────────────────
+  /purchases:
+    get:
+      operationId: listPurchases
+      tags: [purchases]
+      summary: Listar pedidos de compra
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Purchase"
+    post:
+      operationId: createPurchase
+      tags: [purchases]
+      summary: Criar pedido de compra
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePurchaseBody"
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Purchase"
+
+  /purchases/{id}:
+    get:
+      operationId: getPurchase
+      tags: [purchases]
+      summary: Obter pedido de compra
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Purchase"
+    patch:
+      operationId: updatePurchase
+      tags: [purchases]
+      summary: Atualizar status do pedido
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePurchaseBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Purchase"
+
+  # ─── Financial ────────────────────────────────────────────────
+  /financial/transactions:
+    get:
+      operationId: listFinancialTransactions
+      tags: [financial]
+      summary: Listar transações financeiras
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FinancialTransaction"
+    post:
+      operationId: createFinancialTransaction
+      tags: [financial]
+      summary: Criar transação financeira
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFinancialTransactionBody"
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FinancialTransaction"
+
+  /financial/cashflow:
+    get:
+      operationId: getFinancialCashflow
+      tags: [financial]
+      summary: Fluxo de caixa
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CashflowSummary"
+
+  /financial/accounts-payable:
+    get:
+      operationId: listAccountsPayable
+      tags: [financial]
+      summary: Contas a pagar
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FinancialTransaction"
+
+  /financial/accounts-receivable:
+    get:
+      operationId: listAccountsReceivable
+      tags: [financial]
+      summary: Contas a receber
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FinancialTransaction"
+
+  # ─── Users ────────────────────────────────────────────────────
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: Listar usuários
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Criar usuário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserBody"
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}:
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Atualizar usuário
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Excluir usuário
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Excluído
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +945,794 @@ components:
       required:
         - status
 
+    DashboardSummary:
+      type: object
+      properties:
+        dailyRevenue:
+          type: number
+        dailySales:
+          type: integer
+        lowStockCount:
+          type: integer
+        expiringCount:
+          type: integer
+        monthlyRevenue:
+          type: number
+        pendingPurchases:
+          type: integer
+        activeCustomers:
+          type: integer
+        anvisaAlerts:
+          type: integer
+      required:
+        - dailyRevenue
+        - dailySales
+        - lowStockCount
+        - expiringCount
+        - monthlyRevenue
+        - pendingPurchases
+        - activeCustomers
+        - anvisaAlerts
+
+    MonthlySalePoint:
+      type: object
+      properties:
+        month:
+          type: string
+        revenue:
+          type: number
+        salesCount:
+          type: integer
+      required:
+        - month
+        - revenue
+        - salesCount
+
+    TopProduct:
+      type: object
+      properties:
+        productId:
+          type: integer
+        productName:
+          type: string
+        quantitySold:
+          type: integer
+        revenue:
+          type: number
+      required:
+        - productId
+        - productName
+        - quantitySold
+        - revenue
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        genericName:
+          type: ["string", "null"]
+        barcode:
+          type: ["string", "null"]
+        category:
+          type: string
+        manufacturer:
+          type: ["string", "null"]
+        dosage:
+          type: ["string", "null"]
+        unit:
+          type: string
+        costPrice:
+          type: number
+        salePrice:
+          type: number
+        minStock:
+          type: integer
+        currentStock:
+          type: integer
+        isControlled:
+          type: boolean
+        anvisaCode:
+          type: ["string", "null"]
+        requiresPrescription:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - category
+        - unit
+        - costPrice
+        - salePrice
+        - minStock
+        - currentStock
+        - isControlled
+        - requiresPrescription
+        - createdAt
+
+    CreateProductBody:
+      type: object
+      properties:
+        name:
+          type: string
+        genericName:
+          type: ["string", "null"]
+        barcode:
+          type: ["string", "null"]
+        category:
+          type: string
+        manufacturer:
+          type: ["string", "null"]
+        dosage:
+          type: ["string", "null"]
+        unit:
+          type: string
+        costPrice:
+          type: number
+        salePrice:
+          type: number
+        minStock:
+          type: integer
+        isControlled:
+          type: boolean
+        anvisaCode:
+          type: ["string", "null"]
+        requiresPrescription:
+          type: boolean
+      required:
+        - name
+        - category
+        - unit
+        - costPrice
+        - salePrice
+        - minStock
+        - isControlled
+        - requiresPrescription
+
+    StockLot:
+      type: object
+      properties:
+        id:
+          type: integer
+        productId:
+          type: integer
+        productName:
+          type: string
+        lotNumber:
+          type: string
+        quantity:
+          type: integer
+        expirationDate:
+          type: string
+        supplierId:
+          type: ["integer", "null"]
+        supplierName:
+          type: ["string", "null"]
+        receivedAt:
+          type: string
+        costPrice:
+          type: number
+      required:
+        - id
+        - productId
+        - productName
+        - lotNumber
+        - quantity
+        - expirationDate
+        - receivedAt
+        - costPrice
+
+    CreateStockEntryBody:
+      type: object
+      properties:
+        productId:
+          type: integer
+        lotNumber:
+          type: string
+        quantity:
+          type: integer
+        expirationDate:
+          type: string
+        supplierId:
+          type: ["integer", "null"]
+        costPrice:
+          type: number
+      required:
+        - productId
+        - lotNumber
+        - quantity
+        - expirationDate
+        - costPrice
+
+    StockMovement:
+      type: object
+      properties:
+        id:
+          type: integer
+        productId:
+          type: integer
+        productName:
+          type: string
+        type:
+          type: string
+          enum: [entrada, saida, ajuste, transferencia]
+        quantity:
+          type: integer
+        reason:
+          type: ["string", "null"]
+        userId:
+          type: integer
+        userName:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - productId
+        - productName
+        - type
+        - quantity
+        - userId
+        - userName
+        - createdAt
+
+    StockAdjustBody:
+      type: object
+      properties:
+        productId:
+          type: integer
+        quantity:
+          type: integer
+        reason:
+          type: string
+      required:
+        - productId
+        - quantity
+        - reason
+
+    Sale:
+      type: object
+      properties:
+        id:
+          type: integer
+        customerId:
+          type: ["integer", "null"]
+        customerName:
+          type: ["string", "null"]
+        customerCpf:
+          type: ["string", "null"]
+        userId:
+          type: integer
+        userName:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SaleItem"
+        subtotal:
+          type: number
+        discount:
+          type: number
+        total:
+          type: number
+        paymentMethod:
+          type: string
+          enum: [dinheiro, cartao_credito, cartao_debito, pix, convenio]
+        status:
+          type: string
+          enum: [concluida, cancelada, pendente]
+        createdAt:
+          type: string
+      required:
+        - id
+        - userId
+        - userName
+        - items
+        - subtotal
+        - discount
+        - total
+        - paymentMethod
+        - status
+        - createdAt
+
+    SaleItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        productId:
+          type: integer
+        productName:
+          type: string
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+        discount:
+          type: number
+        total:
+          type: number
+      required:
+        - id
+        - productId
+        - productName
+        - quantity
+        - unitPrice
+        - discount
+        - total
+
+    CreateSaleBody:
+      type: object
+      properties:
+        customerId:
+          type: ["integer", "null"]
+        customerCpf:
+          type: ["string", "null"]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateSaleItemBody"
+        discount:
+          type: number
+        paymentMethod:
+          type: string
+          enum: [dinheiro, cartao_credito, cartao_debito, pix, convenio]
+      required:
+        - items
+        - paymentMethod
+
+    CreateSaleItemBody:
+      type: object
+      properties:
+        productId:
+          type: integer
+        quantity:
+          type: integer
+        discount:
+          type: number
+      required:
+        - productId
+        - quantity
+
+    Customer:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        cpf:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        birthDate:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        loyaltyPoints:
+          type: integer
+        totalPurchases:
+          type: number
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - loyaltyPoints
+        - totalPurchases
+        - createdAt
+
+    CreateCustomerBody:
+      type: object
+      properties:
+        name:
+          type: string
+        cpf:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        birthDate:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+      required:
+        - name
+
+    Supplier:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        cnpj:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        contact:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - createdAt
+
+    CreateSupplierBody:
+      type: object
+      properties:
+        name:
+          type: string
+        cnpj:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        contact:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+      required:
+        - name
+
+    Prescription:
+      type: object
+      properties:
+        id:
+          type: integer
+        customerId:
+          type: ["integer", "null"]
+        customerName:
+          type: ["string", "null"]
+        doctorName:
+          type: string
+        doctorCrm:
+          type: string
+        prescriptionDate:
+          type: string
+        expirationDate:
+          type: ["string", "null"]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PrescriptionItem"
+        status:
+          type: string
+          enum: [pendente, dispensada, vencida, cancelada]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - doctorName
+        - doctorCrm
+        - prescriptionDate
+        - items
+        - status
+        - createdAt
+
+    PrescriptionItem:
+      type: object
+      properties:
+        productId:
+          type: integer
+        productName:
+          type: string
+        quantity:
+          type: integer
+        dosageInstructions:
+          type: ["string", "null"]
+      required:
+        - productId
+        - productName
+        - quantity
+
+    CreatePrescriptionBody:
+      type: object
+      properties:
+        customerId:
+          type: ["integer", "null"]
+        doctorName:
+          type: string
+        doctorCrm:
+          type: string
+        prescriptionDate:
+          type: string
+        expirationDate:
+          type: ["string", "null"]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PrescriptionItem"
+        notes:
+          type: ["string", "null"]
+      required:
+        - doctorName
+        - doctorCrm
+        - prescriptionDate
+        - items
+
+    ControlledDispensation:
+      type: object
+      properties:
+        id:
+          type: integer
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        customerCpf:
+          type: string
+        productId:
+          type: integer
+        productName:
+          type: string
+        prescriptionId:
+          type: ["integer", "null"]
+        quantity:
+          type: integer
+        anvisaClass:
+          type: string
+        notificationNumber:
+          type: ["string", "null"]
+        retentionRequired:
+          type: boolean
+        retained:
+          type: boolean
+        dispensedBy:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - customerId
+        - customerName
+        - customerCpf
+        - productId
+        - productName
+        - quantity
+        - anvisaClass
+        - retentionRequired
+        - retained
+        - dispensedBy
+        - createdAt
+
+    CreateControlledDispensationBody:
+      type: object
+      properties:
+        customerId:
+          type: integer
+        productId:
+          type: integer
+        prescriptionId:
+          type: ["integer", "null"]
+        quantity:
+          type: integer
+        anvisaClass:
+          type: string
+        notificationNumber:
+          type: ["string", "null"]
+        retentionRequired:
+          type: boolean
+        retained:
+          type: boolean
+      required:
+        - customerId
+        - productId
+        - quantity
+        - anvisaClass
+        - retentionRequired
+        - retained
+
+    Purchase:
+      type: object
+      properties:
+        id:
+          type: integer
+        supplierId:
+          type: integer
+        supplierName:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseItem"
+        total:
+          type: number
+        status:
+          type: string
+          enum: [pendente, confirmado, recebido, cancelado]
+        expectedDate:
+          type: ["string", "null"]
+        receivedDate:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - supplierId
+        - supplierName
+        - items
+        - total
+        - status
+        - createdAt
+
+    PurchaseItem:
+      type: object
+      properties:
+        productId:
+          type: integer
+        productName:
+          type: string
+        quantity:
+          type: integer
+        unitCost:
+          type: number
+        total:
+          type: number
+      required:
+        - productId
+        - productName
+        - quantity
+        - unitCost
+        - total
+
+    CreatePurchaseBody:
+      type: object
+      properties:
+        supplierId:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseItem"
+        expectedDate:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+      required:
+        - supplierId
+        - items
+
+    UpdatePurchaseBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pendente, confirmado, recebido, cancelado]
+        receivedDate:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+
+    FinancialTransaction:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [receita, despesa]
+        category:
+          type: string
+        description:
+          type: string
+        amount:
+          type: number
+        dueDate:
+          type: string
+        paidDate:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pendente, pago, vencido, cancelado]
+        createdAt:
+          type: string
+      required:
+        - id
+        - type
+        - category
+        - description
+        - amount
+        - dueDate
+        - status
+        - createdAt
+
+    CreateFinancialTransactionBody:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [receita, despesa]
+        category:
+          type: string
+        description:
+          type: string
+        amount:
+          type: number
+        dueDate:
+          type: string
+      required:
+        - type
+        - category
+        - description
+        - amount
+        - dueDate
+
+    CashflowSummary:
+      type: object
+      properties:
+        totalReceivable:
+          type: number
+        totalPayable:
+          type: number
+        balance:
+          type: number
+        overdueReceivable:
+          type: number
+        overduePayable:
+          type: number
+      required:
+        - totalReceivable
+        - totalPayable
+        - balance
+        - overdueReceivable
+        - overduePayable
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [admin, gerente, atendente, farmaceutico]
+        active:
+          type: boolean
+        lastLogin:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - email
+        - role
+        - active
+        - createdAt
+
+    CreateUserBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [admin, gerente, atendente, farmaceutico]
+        active:
+          type: boolean
+      required:
+        - name
+        - email
+        - role
