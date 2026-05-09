@@ -1,0 +1,47 @@
+appId: com.farmasystem.app
+productName: FarmaSystem
+copyright: Copyright © 2025 FarmaSystem
+
+directories:
+  output: dist-release
+  buildResources: build
+
+files:
+  - dist/**/*
+  - package.json
+
+extraResources:
+  - from: ../api-server/dist-desktop
+    to: api-server
+    filter:
+      - "**/*"
+  - from: ../farmacia/dist/public
+    to: public
+    filter:
+      - "**/*"
+
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Office
+  icon: build/icon.png
+
+mac:
+  target:
+    - dmg
+  icon: build/icon.icns
+  hardenedRuntime: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+
+win:
+  target:
+    - nsis
+  icon: build/icon.ico
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico

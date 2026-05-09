@@ -5,13 +5,19 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./schema": "./src/schema/index.ts"
+    "./schema": "./src/schema/index.ts",
+    "./sqlite": "./src/index-sqlite.ts",
+    "./schema-sqlite": "./src/schema-sqlite/index.ts"
   },
   "scripts": {
     "push": "drizzle-kit push --config ./drizzle.config.ts",
-    "push-force": "drizzle-kit push --force --config ./drizzle.config.ts"
+    "push-force": "drizzle-kit push --force --config ./drizzle.config.ts",
+    "push:sqlite": "drizzle-kit push --config ./drizzle.sqlite.config.ts",
+    "generate:sqlite": "drizzle-kit generate --config ./drizzle.sqlite.config.ts",
+    "migrate:sqlite": "tsx src/migrate-sqlite.ts"
   },
   "dependencies": {
+    "@libsql/client": "^0.15.1",
     "drizzle-orm": "catalog:",
     "drizzle-zod": "^0.8.3",
     "pg": "^8.20.0",

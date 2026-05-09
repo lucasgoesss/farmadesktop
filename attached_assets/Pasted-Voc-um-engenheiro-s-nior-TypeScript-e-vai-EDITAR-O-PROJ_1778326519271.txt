@@ -1,0 +1,72 @@
+Você é um engenheiro sênior TypeScript e vai EDITAR O PROJETO EXISTENTE (não criar app do zero).
+
+Objetivo:
+Transformar o sistema atual em uma base Desktop First para farmácia, preservando o monorepo e o máximo de código já existente.
+
+Contexto do projeto atual:
+- Monorepo pnpm workspace
+- Frontend React + Vite
+- Backend Node + Express
+- DB com Drizzle
+- Contrato OpenAPI + cliente gerado React Query
+
+Direção técnica obrigatória:
+1) Manter frontend React + Vite
+2) Manter backend Node + Express
+3) Adicionar shell desktop com Electron
+4) Migrar persistência local para SQLite com Drizzle (sem depender de Postgres local para rodar desktop)
+5) Preparar arquitetura offline-first (fila de sync futura), sem quebrar fluxo atual web
+
+Restrições:
+- NÃO remover módulos de negócio já existentes (produtos, clientes, vendas, estoque, financeiro, etc.)
+- NÃO quebrar scripts atuais de dev/build do monorepo
+- NÃO apagar integração OpenAPI/cliente gerado; adaptar para continuar funcionando
+- Fazer mudanças incrementais e compatíveis
+
+Tarefas que você deve executar:
+1. Criar pacote desktop no monorepo (Electron) e configurar:
+   - processo main
+   - processo preload
+   - abertura da UI React
+   - start em dev integrado com frontend + api local
+2. Ajustar backend para rodar embarcado no desktop:
+   - porta configurável
+   - healthcheck
+   - inicialização segura
+3. Introduzir SQLite no pacote de DB:
+   - manter schema Drizzle
+   - criar configuração para driver SQLite
+   - criar script de bootstrap/migração local
+4. Preparar camada de configuração por ambiente:
+   - web atual continua funcional
+   - desktop usa API local e DB local
+5. Adicionar base de sync offline (estrutura, não precisa implementar servidor remoto completo):
+   - tabela de fila de eventos/outbox
+   - retries básicos e status
+6. Atualizar scripts do workspace:
+   - dev:web (como hoje)
+   - dev:desktop
+   - build:desktop
+   - typecheck sem regressão
+7. Documentar no README:
+   - como rodar web
+   - como rodar desktop
+   - variáveis de ambiente
+   - limitações atuais
+
+Qualidade e validação:
+- Rode typecheck e build dos pacotes alterados
+- Corrija erros de tipagem
+- Se algo não puder ser concluído, explique exatamente o bloqueio e deixe TODOs claros
+
+Formato da resposta final:
+1) Resumo do que foi alterado
+2) Lista de arquivos criados/alterados
+3) Scripts novos/atualizados
+4) Passo a passo para executar desktop em desenvolvimento
+5) Riscos/pendências
+
+Importante:
+- Faça as alterações diretamente no projeto atual.
+- Priorize compatibilidade e entrega incremental.
+- Não simplifique removendo funcionalidades existentes.
