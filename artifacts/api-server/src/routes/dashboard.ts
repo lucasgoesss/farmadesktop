@@ -210,22 +210,37 @@ router.get("/dashboard/monthly-sales", async (req, res): Promise<void> => {
   try {
     const rows = await db
       .select({
-        month: sql<string>`to_char(${salesTable.createdAt}, 'YYYY-MM')`,
-        revenue: sql<number>`coalesce(sum(${salesTable.total}),0)`,
-        salesCount: sql<number>`count(*)`,
+        createdAt: salesTable.createdAt,
+        total: salesTable.total,
       })
       .from(salesTable)
-      .where(eq(salesTable.status, "concluida"))
-      .groupBy(sql`to_char(${salesTable.createdAt}, 'YYYY-MM')`)
-      .orderBy(sql`to_char(${salesTable.createdAt}, 'YYYY-MM')`);
+      .where(eq(salesTable.status, "concluida"));
 
-    res.json(
-      rows.map((r) => ({
-        month: r.month,
-        revenue: parseFloat(String(r.revenue)),
-        salesCount: Number(r.salesCount),
-      }))
-    );
+    const monthly = new Map<string, { revenue: number; salesCount: number }>();
+
+    for (const row of rows) {
+      const dateValue = row.createdAt instanceof Date ? row.createdAt : new Date(String(row.createdAt));
+
+      if (Number.isNaN(dateValue.getTime())) {
+        continue;
+      }
+
+      const month = dateValue.toISOString().slice(0, 7);
+      const current = monthly.get(month) ?? { revenue: 0, salesCount: 0 };
+      current.revenue += parseFloat(String(row.total));
+      current.salesCount += 1;
+      monthly.set(month, current);
+    }
+
+    const result = Array.from(monthly.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, values]) => ({
+        month,
+        revenue: Number(values.revenue.toFixed(2)),
+        salesCount: values.salesCount,
+      }));
+
+    res.json(result);
   } catch (err) {
     req.log.error({ err }, "Error fetching monthly sales");
     res.status(500).json({ error: "Internal server error" });

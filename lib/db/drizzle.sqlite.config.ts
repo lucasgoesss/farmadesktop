@@ -9,10 +9,10 @@ const rawPath =
 const url = rawPath.startsWith("file:") ? rawPath : `file:${rawPath}`;
 
 export default defineConfig({
-  schema: path.join(__dirname, "./src/schema-sqlite/index.ts"),
+  schema: "./src/schema-sqlite/*.ts",
   dialect: "turso",
   dbCredentials: {
     url,
   },
-  out: path.join(__dirname, "./drizzle/sqlite"),
+  out: "./drizzle/sqlite",
 });
