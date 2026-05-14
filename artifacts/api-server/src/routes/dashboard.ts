@@ -1,23 +1,33 @@
 import { Router } from "express";
-import { db, salesTable, productsTable, saleItemsTable, stockLotsTable, financialTransactionsTable, customersTable } from "@workspace/db";
-import { sql, lt, lte, desc, eq, gte, and } from "drizzle-orm";
+import * as dbModule from "@workspace/db";
+import { sql, lte, desc, eq, gte, and } from "drizzle-orm";
+
+const {
+  db,
+  salesTable,
+  productsTable,
+  saleItemsTable,
+  stockLotsTable,
+  financialTransactionsTable,
+  customersTable,
+} = dbModule as any;
 
 const router = Router();
 
-router.get("/dashboard/summary", async (req, res): Promise<void> => {
+router.get("/dashboard/summary", async (req: any, res: any): Promise<void> => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const [dailySalesRows] = await db
-      .select({ count: sql<number>`count(*)`, total: sql<number>`coalesce(sum(${salesTable.total}),0)` })
+      .select({ count: sql`count(*)`, total: sql`coalesce(sum(${salesTable.total}),0)` })
       .from(salesTable)
       .where(and(gte(salesTable.createdAt, today), eq(salesTable.status, "concluida")));
 
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const [monthlySalesRow] = await db
-      .select({ total: sql<number>`coalesce(sum(${salesTable.total}),0)` })
+      .select({ total: sql`coalesce(sum(${salesTable.total}),0)` })
       .from(salesTable)
       .where(and(gte(salesTable.createdAt, thirtyDaysAgo), eq(salesTable.status, "concluida")));
 
@@ -35,12 +45,12 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
       .where(lte(stockLotsTable.expirationDate, thirtyDaysStr));
 
     const [pendingPurchaseRow] = await db
-      .select({ count: sql<number>`count(*)` })
+      .select({ count: sql`count(*)` })
       .from(financialTransactionsTable)
       .where(eq(financialTransactionsTable.status, "pendente"));
 
     const [activeCustomerRow] = await db
-      .select({ count: sql<number>`count(*)` })
+      .select({ count: sql`count(*)` })
       .from(customersTable);
 
     const controlledRows = await db
@@ -64,7 +74,7 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
   }
 });
 
-router.get("/dashboard/recent-sales", async (req, res): Promise<void> => {
+router.get("/dashboard/recent-sales", async (req: any, res: any): Promise<void> => {
   try {
     const sales = await db
       .select()
@@ -73,7 +83,7 @@ router.get("/dashboard/recent-sales", async (req, res): Promise<void> => {
       .limit(10);
 
     const result = await Promise.all(
-      sales.map(async (sale) => {
+      sales.map(async (sale: any) => {
         const items = await db
           .select({
             id: saleItemsTable.id,
@@ -89,7 +99,7 @@ router.get("/dashboard/recent-sales", async (req, res): Promise<void> => {
           .where(eq(saleItemsTable.saleId, sale.id));
 
         const customer = sale.customerId
-          ? await db.select().from(customersTable).where(eq(customersTable.id, sale.customerId)).then((r) => r[0])
+          ? await db.select().from(customersTable).where(eq(customersTable.id, sale.customerId)).then((r: any[]) => r[0])
           : null;
 
         return {
@@ -99,7 +109,7 @@ router.get("/dashboard/recent-sales", async (req, res): Promise<void> => {
           total: parseFloat(String(sale.total)),
           customerName: customer?.name ?? null,
           userName: "Admin",
-          items: items.map((i) => ({
+          items: items.map((i: any) => ({
             ...i,
             productName: i.productName ?? "Produto",
             unitPrice: parseFloat(String(i.unitPrice)),
@@ -117,14 +127,14 @@ router.get("/dashboard/recent-sales", async (req, res): Promise<void> => {
   }
 });
 
-router.get("/dashboard/top-products", async (req, res): Promise<void> => {
+router.get("/dashboard/top-products", async (req: any, res: any): Promise<void> => {
   try {
     const rows = await db
       .select({
         productId: saleItemsTable.productId,
         productName: productsTable.name,
-        quantitySold: sql<number>`sum(${saleItemsTable.quantity})`,
-        revenue: sql<number>`sum(${saleItemsTable.total})`,
+        quantitySold: sql`sum(${saleItemsTable.quantity})`,
+        revenue: sql`sum(${saleItemsTable.total})`,
       })
       .from(saleItemsTable)
       .leftJoin(productsTable, eq(saleItemsTable.productId, productsTable.id))
@@ -133,7 +143,7 @@ router.get("/dashboard/top-products", async (req, res): Promise<void> => {
       .limit(10);
 
     res.json(
-      rows.map((r) => ({
+      rows.map((r: any) => ({
         productId: r.productId,
         productName: r.productName ?? "Produto",
         quantitySold: Number(r.quantitySold),
@@ -146,7 +156,7 @@ router.get("/dashboard/top-products", async (req, res): Promise<void> => {
   }
 });
 
-router.get("/dashboard/low-stock", async (req, res): Promise<void> => {
+router.get("/dashboard/low-stock", async (req: any, res: any): Promise<void> => {
   try {
     const rows = await db
       .select()
@@ -156,7 +166,7 @@ router.get("/dashboard/low-stock", async (req, res): Promise<void> => {
       .limit(20);
 
     res.json(
-      rows.map((p) => ({
+      rows.map((p: any) => ({
         ...p,
         costPrice: parseFloat(String(p.costPrice)),
         salePrice: parseFloat(String(p.salePrice)),
@@ -168,7 +178,7 @@ router.get("/dashboard/low-stock", async (req, res): Promise<void> => {
   }
 });
 
-router.get("/dashboard/expiring-products", async (req, res): Promise<void> => {
+router.get("/dashboard/expiring-products", async (req: any, res: any): Promise<void> => {
   try {
     const ninetyDays = new Date();
     ninetyDays.setDate(ninetyDays.getDate() + 90);
@@ -183,7 +193,7 @@ router.get("/dashboard/expiring-products", async (req, res): Promise<void> => {
         quantity: stockLotsTable.quantity,
         expirationDate: stockLotsTable.expirationDate,
         supplierId: stockLotsTable.supplierId,
-        supplierName: sql<string | null>`null`,
+        supplierName: sql`null`,
         receivedAt: stockLotsTable.receivedAt,
         costPrice: stockLotsTable.costPrice,
       })
@@ -194,7 +204,7 @@ router.get("/dashboard/expiring-products", async (req, res): Promise<void> => {
       .limit(20);
 
     res.json(
-      rows.map((r) => ({
+      rows.map((r: any) => ({
         ...r,
         productName: r.productName ?? "Produto",
         costPrice: parseFloat(String(r.costPrice)),
@@ -206,7 +216,7 @@ router.get("/dashboard/expiring-products", async (req, res): Promise<void> => {
   }
 });
 
-router.get("/dashboard/monthly-sales", async (req, res): Promise<void> => {
+router.get("/dashboard/monthly-sales", async (req: any, res: any): Promise<void> => {
   try {
     const rows = await db
       .select({
