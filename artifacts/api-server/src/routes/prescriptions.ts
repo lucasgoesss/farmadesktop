@@ -1,8 +1,8 @@
-import { Router, type IRouter } from "express";
+import { Router } from "express";
 import { db, prescriptionsTable, customersTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 
-const router: IRouter = Router();
+const router = Router();
 
 const toPrescription = async (p: typeof prescriptionsTable.$inferSelect) => {
   const customer = p.customerId

@@ -1,9 +1,9 @@
-import { Router, type IRouter } from "express";
+import { Router } from "express";
 import { db, salesTable, saleItemsTable, productsTable, customersTable, stockMovementsTable } from "@workspace/db";
 import { eq, desc, gte, lte, and } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 
-const router: IRouter = Router();
+const router = Router();
 
 const toSale = async (sale: typeof salesTable.$inferSelect) => {
   const items = await db

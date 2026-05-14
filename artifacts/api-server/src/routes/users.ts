@@ -1,8 +1,8 @@
-import { Router, type IRouter } from "express";
+import { Router } from "express";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
-const router: IRouter = Router();
+const router = Router();
 
 router.get("/users", async (req, res): Promise<void> => {
   try {

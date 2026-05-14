@@ -1,8 +1,8 @@
-import { Router, type IRouter } from "express";
+import { Router } from "express";
 import { db, productsTable } from "@workspace/db";
 import { eq, ilike, or } from "drizzle-orm";
 
-const router: IRouter = Router();
+const router = Router();
 
 const toProduct = (p: typeof productsTable.$inferSelect) => ({
   ...p,

@@ -1,8 +1,8 @@
-import { Router, type IRouter } from "express";
+import { Router } from "express";
 import { db, purchasesTable, suppliersTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 
-const router: IRouter = Router();
+const router = Router();
 
 const toPurchase = async (p: typeof purchasesTable.$inferSelect) => {
   const supplier = await db.select().from(suppliersTable).where(eq(suppliersTable.id, p.supplierId)).then((r) => r[0]);

@@ -1,9 +1,9 @@
-import { Router, type IRouter } from "express";
+import { Router } from "express";
 import { db, stockLotsTable, stockMovementsTable, productsTable, suppliersTable, usersTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 
-const router: IRouter = Router();
+const router = Router();
 
 router.get("/stock", async (req, res): Promise<void> => {
   try {
