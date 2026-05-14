@@ -1,7 +1,12 @@
-import app from "../src/app.js";
+let cachedApp;
 
-const handler = (req, res) => {
-  return app(req, res);
+const handler = async (req, res) => {
+  if (!cachedApp) {
+    const mod = await import("../dist/app.mjs");
+    cachedApp = mod.default;
+  }
+
+  return cachedApp(req, res);
 };
 
 export default handler;
