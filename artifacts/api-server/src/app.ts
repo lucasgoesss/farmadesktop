@@ -40,7 +40,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const rootHandler: RequestHandler = (_req, res) => {
+type JsonLikeResponse = {
+  send: (body: unknown) => unknown;
+};
+
+const rootHandler = (_req: unknown, res: JsonLikeResponse): void => {
   res.send({ service: "api-server", status: "ok" });
 };
 

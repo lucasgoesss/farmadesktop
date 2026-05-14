@@ -1,8 +1,12 @@
-import { Router, type RequestHandler } from "express";
+import { Router } from "express";
 
 const router = Router();
 
-const healthHandler: RequestHandler = (_req, res) => {
+type JsonLikeResponse = {
+  send: (body: unknown) => unknown;
+};
+
+const healthHandler = (_req: unknown, res: JsonLikeResponse): void => {
   res.send({ status: "ok" });
 };
 
