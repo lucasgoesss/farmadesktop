@@ -2,17 +2,16 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "installCommand": "pnpm install --no-frozen-lockfile",
-  "buildCommand": "pnpm run build",
   "builds": [
     {
-      "src": "dist/index.mjs",
+      "src": "src/app.ts",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "dist/index.mjs"
+      "dest": "src/app.ts"
     }
   ]
 }
