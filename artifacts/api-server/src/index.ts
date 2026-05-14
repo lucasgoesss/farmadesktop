@@ -1,3 +1,4 @@
+import { createServer } from "node:http";
 import app from "./app.js";
 import { logger } from "./lib/logger.js";
 
@@ -8,7 +9,9 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-const server = app.listen(port, () => {
+const server = createServer(app);
+
+server.listen(port, () => {
   logger.info({ port }, "Server listening");
 });
 
