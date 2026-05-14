@@ -1,4 +1,4 @@
-import express, { type Request, type RequestHandler, type Response } from "express";
+import express, { type RequestHandler } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes/index.js";
@@ -40,9 +40,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (_req: Request, res: Response) => {
-  res.json({ service: "api-server", status: "ok" });
-});
+const rootHandler: RequestHandler = (_req, res) => {
+  res.send({ service: "api-server", status: "ok" });
+};
+
+app.get("/", rootHandler);
 
 app.use("/api", router);
 
