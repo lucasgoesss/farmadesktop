@@ -2,8 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   useGetDashboardSummary, 
   useGetDashboardRecentSales, 
-  useGetDashboardTopProducts,
-  useGetDashboardLowStock
+  useGetDashboardTopProducts
 } from "@workspace/api-client-react";
 import { DollarSign, ShoppingCart, AlertTriangle, Activity } from "lucide-react";
 
@@ -11,7 +10,9 @@ export default function Dashboard() {
   const { data: summary, isLoading: loadingSummary } = useGetDashboardSummary();
   const { data: recentSales } = useGetDashboardRecentSales();
   const { data: topProducts } = useGetDashboardTopProducts();
-  const { data: lowStock } = useGetDashboardLowStock();
+
+  const recentSalesList = Array.isArray(recentSales) ? recentSales : [];
+  const topProductsList = Array.isArray(topProducts) ? topProducts : [];
 
   return (
     <div className="space-y-6">
@@ -72,7 +73,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentSales?.slice(0, 5).map(sale => (
+              {recentSalesList.slice(0, 5).map((sale) => (
                 <div key={sale.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
                   <div>
                     <p className="font-medium">{sale.customerName || 'Cliente não identificado'}</p>
@@ -83,7 +84,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               ))}
-              {!recentSales?.length && <p className="text-muted-foreground py-4 text-center">Nenhuma venda recente.</p>}
+              {!recentSalesList.length && <p className="text-muted-foreground py-4 text-center">Nenhuma venda recente.</p>}
             </div>
           </CardContent>
         </Card>
@@ -94,7 +95,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {topProducts?.slice(0, 5).map(product => (
+              {topProductsList.slice(0, 5).map((product) => (
                 <div key={product.productId} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
                   <div>
                     <p className="font-medium text-sm">{product.productName}</p>
@@ -102,7 +103,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               ))}
-              {!topProducts?.length && <p className="text-muted-foreground py-4 text-center">Nenhum dado disponível.</p>}
+              {!topProductsList.length && <p className="text-muted-foreground py-4 text-center">Nenhum dado disponível.</p>}
             </div>
           </CardContent>
         </Card>

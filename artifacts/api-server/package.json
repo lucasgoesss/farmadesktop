@@ -4,9 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "export NODE_ENV=development && pnpm run build && pnpm run start",
+    "dev": "node ./dev.mjs",
+    "dev:pg": "cross-env NODE_ENV=development PORT=8080 pnpm run build && cross-env NODE_ENV=development PORT=8080 pnpm run start",
+    "dev:sqlite": "cross-env SQLITE_PATH=../../.local/farmacy-flow.sqlite pnpm --filter @workspace/db run push:sqlite && cross-env NODE_ENV=development PORT=8080 SQLITE_PATH=../../.local/farmacy-flow.sqlite pnpm run build:sqlite && cross-env NODE_ENV=development PORT=8080 SQLITE_PATH=../../.local/farmacy-flow.sqlite pnpm run start:sqlite",
     "build": "node ./build.mjs",
+    "build:sqlite": "node ../desktop/build-api-desktop.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
+    "start:sqlite": "node --enable-source-maps ./dist-desktop/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
@@ -24,6 +28,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "catalog:",
+    "cross-env": "^10.1.0",
     "esbuild": "^0.27.3",
     "esbuild-plugin-pino": "^2.3.3",
     "pino-pretty": "^13",
