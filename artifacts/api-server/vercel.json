@@ -5,14 +5,14 @@
   "buildCommand": "pnpm run build",
   "builds": [
     {
-      "src": "src/index.ts",
+      "src": "dist/index.mjs",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "src/index.ts"
+      "dest": "dist/index.mjs"
     }
   ]
 }
