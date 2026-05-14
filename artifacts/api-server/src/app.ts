@@ -1,10 +1,10 @@
-import express, { type Express } from "express";
+import express, { type Application, type RequestHandler } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
-import router from "./routes";
-import { logger } from "./lib/logger";
+import router from "./routes/index.js";
+import { logger } from "./lib/logger.js";
 
-const app: Express = express();
+const app: Application = express();
 const pinoHttpMiddleware = pinoHttp as unknown as (options: {
   logger: typeof logger;
   serializers: {
@@ -15,7 +15,7 @@ const pinoHttpMiddleware = pinoHttp as unknown as (options: {
     };
     res: (res: { statusCode?: unknown }) => { statusCode: unknown };
   };
-}) => ReturnType<Express["use"]>;
+}) => RequestHandler;
 
 app.use(
   pinoHttpMiddleware({
